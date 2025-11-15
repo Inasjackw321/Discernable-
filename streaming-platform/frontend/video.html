@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Player - StreamVibe</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .video-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: var(--spacing-xl);
+    }
+
+    .video-primary {
+      min-width: 0;
+    }
+
+    .video-player-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .video-player {
+      width: 100%;
+      height: 100%;
+    }
+
+    .video-info {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .video-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .video-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .video-stats {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .action-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .channel-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-md) 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .channel-details {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .channel-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .channel-text {
+      flex: 1;
+    }
+
+    .channel-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      cursor: pointer;
+    }
+
+    .verified-badge {
+      color: var(--primary);
+    }
+
+    .channel-subs {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .subscribe-btn {
+      padding: var(--spacing-sm) var(--spacing-lg);
+    }
+
+    .video-description {
+      background: var(--bg-tertiary);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .description-preview {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .description-full {
+      display: none;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .show-more-btn {
+      color: var(--text-primary);
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: var(--spacing-sm);
+      display: inline-block;
+    }
+
+    .comments-section {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .comments-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .comments-count {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .comments-sort {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .comment-form {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .comment-input {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid transparent;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      color: var(--text-primary);
+      resize: none;
+      min-height: 60px;
+      transition: all var(--transition-fast);
+    }
+
+    .comment-input:focus {
+      border-color: var(--primary);
+      background: var(--bg-secondary);
+    }
+
+    .comment {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .comment-content {
+      flex: 1;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .comment-author {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .comment-date {
+      color: var(--text-tertiary);
+      font-size: 0.85rem;
+    }
+
+    .comment-text {
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .comment-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .comment-action {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      color: var(--text-tertiary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .comment-action:hover {
+      color: var(--text-primary);
+    }
+
+    .suggestions-sidebar {
+      position: sticky;
+      top: calc(var(--navbar-height) + var(--spacing-lg));
+      max-height: calc(100vh - var(--navbar-height) - var(--spacing-xl));
+      overflow-y: auto;
+    }
+
+    .suggestions-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .suggestion-item {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-md);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast);
+      padding: var(--spacing-xs);
+    }
+
+    .suggestion-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .suggestion-thumbnail {
+      width: 168px;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      background: var(--bg-tertiary);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .suggestion-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .suggestion-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .suggestion-channel {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .suggestion-meta {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    @media (max-width: 1024px) {
+      .video-container {
+        grid-template-columns: 1fr;
+      }
+
+      .suggestions-sidebar {
+        position: relative;
+        top: 0;
+        max-height: none;
+      }
+
+      .suggestion-item {
+        flex-direction: row;
+      }
+
+      .suggestion-thumbnail {
+        width: 120px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .video-meta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .video-actions {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .action-btn {
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <button class="icon-btn" onclick="history.back()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+          </svg>
+        </button>
+        <a href="index.html" class="logo">
+          <div class="logo-icon">SV</div>
+          <span>StreamVibe</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-bar"
+            placeholder="Search videos, channels..."
+            id="searchInput"
+            onkeyup="handleSearch(event)"
+          >
+          <button class="search-btn" onclick="performSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content full-width">
+    <div class="container">
+      <div class="video-container">
+        <!-- Primary Video Section -->
+        <div class="video-primary">
+          <!-- Video Player -->
+          <div class="video-player-wrapper">
+            <video id="videoPlayer" class="video-player" controls>
+              <source src="" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <!-- Video Info -->
+          <div class="video-info">
+            <h1 class="video-title" id="videoTitle">Loading...</h1>
+
+            <div class="video-meta">
+              <div class="video-stats">
+                <span id="videoViews">0 views</span>
+                <span>•</span>
+                <span id="videoDate">Just now</span>
+              </div>
+
+              <div class="video-actions">
+                <button class="action-btn" id="likeBtn" onclick="toggleLike()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                  </svg>
+                  <span id="likeCount">0</span>
+                </button>
+
+                <button class="action-btn" onclick="shareVideo()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="18" cy="5" r="3"/>
+                    <circle cx="6" cy="12" r="3"/>
+                    <circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  Share
+                </button>
+
+                <button class="action-btn" onclick="addToWatchLater()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Channel Info -->
+          <div class="channel-info">
+            <div class="channel-details">
+              <img src="https://via.placeholder.com/48" alt="Channel" class="channel-avatar" id="channelAvatar" onclick="goToChannel()">
+              <div class="channel-text">
+                <div class="channel-name" id="channelName" onclick="goToChannel()">
+                  Loading...
+                  <span class="verified-badge" id="verifiedBadge" style="display:none;">✓</span>
+                </div>
+                <div class="channel-subs" id="channelSubs">0 subscribers</div>
+              </div>
+            </div>
+            <button class="btn btn-primary subscribe-btn" id="subscribeBtn" onclick="toggleSubscribe()">
+              Subscribe
+            </button>
+          </div>
+
+          <!-- Description -->
+          <div class="video-description">
+            <div class="description-preview" id="descriptionPreview"></div>
+            <div class="description-full" id="descriptionFull"></div>
+            <span class="show-more-btn" id="showMoreBtn" onclick="toggleDescription()">Show more</span>
+          </div>
+
+          <!-- Comments Section -->
+          <div class="comments-section">
+            <div class="comments-header">
+              <h3 class="comments-count"><span id="commentCount">0</span> Comments</h3>
+              <div class="comments-sort">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+                Sort by
+              </div>
+            </div>
+
+            <!-- Comment Form -->
+            <div class="comment-form">
+              <img src="https://via.placeholder.com/40" alt="You" class="comment-avatar" id="currentUserAvatar">
+              <div style="flex: 1;">
+                <textarea
+                  class="comment-input"
+                  id="commentInput"
+                  placeholder="Add a comment..."
+                  rows="1"
+                ></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
+                  <button class="btn btn-ghost btn-sm" onclick="clearComment()">Cancel</button>
+                  <button class="btn btn-primary btn-sm" onclick="postComment()">Comment</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comments List -->
+            <div id="commentsList">
+              <!-- Comments will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggestions Sidebar -->
+        <aside class="suggestions-sidebar">
+          <h3 class="suggestions-title">Suggested Videos</h3>
+          <div id="suggestedVideos">
+            <!-- Suggestions will be loaded here -->
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/video-player.js"></script>
+  <script>
+    let currentVideo = null;
+    let isLiked = false;
+    let isSubscribed = false;
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      initUserMenu();
+      const videoId = getVideoIdFromUrl();
+      if (videoId) {
+        await loadVideo(videoId);
+        await loadComments(videoId);
+        await loadSuggestions(videoId);
+        recordView(videoId);
+      }
+    });
+
+    function getVideoIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadVideo(videoId) {
+      try {
+        const response = await api.get(`/videos/${videoId}`);
+        if (response.success) {
+          currentVideo = response.data;
+          renderVideo(currentVideo);
+        }
+      } catch (error) {
+        console.error('Failed to load video:', error);
+        showDemoVideo();
+      }
+    }
+
+    function renderVideo(video) {
+      document.title = `${video.title} - StreamVibe`;
+      document.getElementById('videoTitle').textContent = video.title;
+      document.getElementById('videoViews').textContent = `${formatViews(video.views)} views`;
+      document.getElementById('videoDate').textContent = formatDate(video.uploadedAt);
+      document.getElementById('likeCount').textContent = formatViews(video.likes);
+
+      // Video player
+      const player = document.getElementById('videoPlayer');
+      player.src = video.videoUrl;
+
+      // Channel info
+      document.getElementById('channelAvatar').src = video.user.avatar || 'https://via.placeholder.com/48';
+      document.getElementById('channelName').textContent = video.user.displayName;
+      document.getElementById('channelSubs').textContent = `${formatViews(video.user.subscribers)} subscribers`;
+
+      if (video.user.verified) {
+        document.getElementById('verifiedBadge').style.display = 'inline';
+      }
+
+      // Description
+      const preview = video.description.substring(0, 150);
+      document.getElementById('descriptionPreview').textContent = preview + (video.description.length > 150 ? '...' : '');
+      document.getElementById('descriptionFull').textContent = video.description;
+    }
+
+    function showDemoVideo() {
+      const demoVideo = {
+        id: '1',
+        title: 'Amazing Demo Video - StreamVibe Platform Showcase',
+        description: 'Welcome to StreamVibe! This is a demonstration of our modern video streaming platform.\n\nFeatures:\n• High-quality video playback\n• Interactive comments\n• Like and subscribe functionality\n• Personalized recommendations\n• And much more!\n\nThank you for watching!',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        views: 125000,
+        likes: 5200,
+        comments: 320,
+        uploadedAt: '2024-01-15T10:00:00Z',
+        user: {
+          displayName: 'StreamVibe Demo',
+          avatar: 'https://via.placeholder.com/48',
+          subscribers: 50000,
+          verified: true,
+          username: 'demo'
+        }
+      };
+
+      currentVideo = demoVideo;
+      renderVideo(demoVideo);
+      loadDemoComments();
+      loadDemoSuggestions();
+    }
+
+    function loadDemoComments() {
+      const demoComments = [
+        {
+          id: '1',
+          user: { displayName: 'John Doe', avatar: 'https://via.placeholder.com/40' },
+          text: 'This is amazing! Love the new platform!',
+          likes: 25,
+          createdAt: '2024-01-15T11:00:00Z'
+        },
+        {
+          id: '2',
+          user: { displayName: 'Jane Smith', avatar: 'https://via.placeholder.com/40' },
+          text: 'Great video quality and smooth playback. Keep it up!',
+          likes: 15,
+          createdAt: '2024-01-15T12:00:00Z'
+        }
+      ];
+
+      renderComments(demoComments);
+    }
+
+    function loadDemoSuggestions() {
+      const demoSuggestions = [
+        {
+          id: '2',
+          title: 'Learn Web Development - Complete Tutorial',
+          thumbnailUrl: 'https://via.placeholder.com/168x94',
+          duration: 1800,
+          views: 250000,
+          user: { displayName: 'CodeMaster' },
+          uploadedAt: '2024-01-14T10:00:00Z'
+        },
+        {
+          id: '3',
+          title: 'Epic Music Mix 2024',
+          thumbnailUrl: 'https://via.placeholder.com/168x94',
+          duration: 3600,
+          views: 500000,
+          user: { displayName: 'MusicVibes' },
+          uploadedAt: '2024-01-13T10:00:00Z'
+        }
+      ];
+
+      renderSuggestions(demoSuggestions);
+    }
+
+    async function loadComments(videoId) {
+      try {
+        const response = await api.get(`/videos/${videoId}/comments`);
+        if (response.success) {
+          renderComments(response.data.comments);
+        }
+      } catch (error) {
+        console.error('Failed to load comments:', error);
+      }
+    }
+
+    function renderComments(comments) {
+      document.getElementById('commentCount').textContent = comments.length;
+
+      const commentsList = document.getElementById('commentsList');
+      commentsList.innerHTML = comments.map(comment => `
+        <div class="comment">
+          <img src="${comment.user.avatar || 'https://via.placeholder.com/40'}" alt="${comment.user.displayName}" class="comment-avatar">
+          <div class="comment-content">
+            <div class="comment-header">
+              <span class="comment-author">${comment.user.displayName}</span>
+              <span class="comment-date">${formatDate(comment.createdAt)}</span>
+            </div>
+            <div class="comment-text">${comment.text}</div>
+            <div class="comment-actions">
+              <span class="comment-action">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                </svg>
+                ${comment.likes || 0}
+              </span>
+              <span class="comment-action">Reply</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadSuggestions(videoId) {
+      try {
+        const response = await api.get(`/videos/${videoId}/related?limit=15`);
+        if (response.success) {
+          renderSuggestions(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to load suggestions:', error);
+      }
+    }
+
+    function renderSuggestions(videos) {
+      const container = document.getElementById('suggestedVideos');
+      container.innerHTML = videos.map(video => `
+        <div class="suggestion-item" onclick="window.location.href='video.html?id=${video.id}'">
+          <div class="suggestion-thumbnail">
+            <img src="${video.thumbnailUrl || 'https://via.placeholder.com/168x94'}" alt="${video.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
+            <div class="video-duration">${formatDuration(video.duration)}</div>
+          </div>
+          <div class="suggestion-info">
+            <div class="suggestion-title text-clamp-2">${video.title}</div>
+            <div class="suggestion-channel">${video.user?.displayName || 'Unknown'}</div>
+            <div class="suggestion-meta">${formatViews(video.views)} views • ${formatDate(video.uploadedAt)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleDescription() {
+      const preview = document.getElementById('descriptionPreview');
+      const full = document.getElementById('descriptionFull');
+      const btn = document.getElementById('showMoreBtn');
+
+      if (preview.style.display !== 'none') {
+        preview.style.display = 'none';
+        full.style.display = 'block';
+        btn.textContent = 'Show less';
+      } else {
+        preview.style.display = 'block';
+        full.style.display = 'none';
+        btn.textContent = 'Show more';
+      }
+    }
+
+    async function toggleLike() {
+      if (!getCurrentUser()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const btn = document.getElementById('likeBtn');
+      const count = document.getElementById('likeCount');
+
+      isLiked = !isLiked;
+      btn.classList.toggle('active');
+
+      if (isLiked) {
+        count.textContent = formatViews(parseInt(count.textContent.replace(/[^0-9]/g, '')) + 1);
+        await api.post(`/videos/${currentVideo.id}/like`);
+      } else {
+        count.textContent = formatViews(parseInt(count.textContent.replace(/[^0-9]/g, '')) - 1);
+        await api.delete(`/videos/${currentVideo.id}/like`);
+      }
+    }
+
+    async function toggleSubscribe() {
+      if (!getCurrentUser()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const btn = document.getElementById('subscribeBtn');
+      isSubscribed = !isSubscribed;
+
+      if (isSubscribed) {
+        btn.textContent = 'Subscribed';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline');
+        await api.post(`/users/${currentVideo.user.id}/subscribe`);
+      } else {
+        btn.textContent = 'Subscribe';
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+        await api.delete(`/users/${currentVideo.user.id}/subscribe`);
+      }
+    }
+
+    async function postComment() {
+      if (!getCurrentUser()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      try {
+        await api.post(`/videos/${currentVideo.id}/comments`, { text });
+        input.value = '';
+        await loadComments(currentVideo.id);
+      } catch (error) {
+        alert('Failed to post comment');
+      }
+    }
+
+    function clearComment() {
+      document.getElementById('commentInput').value = '';
+    }
+
+    function goToChannel() {
+      if (currentVideo) {
+        window.location.href = `profile.html?user=${currentVideo.user.username}`;
+      }
+    }
+
+    async function recordView(videoId) {
+      try {
+        await api.post(`/videos/${videoId}/view`, {
+          device: 'desktop',
+          referrer: document.referrer
+        });
+      } catch (error) {
+        console.error('Failed to record view:', error);
+      }
+    }
+
+    function shareVideo() {
+      if (navigator.share) {
+        navigator.share({
+          title: currentVideo.title,
+          url: window.location.href
+        });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    }
+
+    function addToWatchLater() {
+      if (!getCurrentUser()) {
+        window.location.href = 'login.html';
+        return;
+      }
+      alert('Added to Watch Later!');
+    }
+
+    // Helper functions
+    function formatViews(views) {
+      if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
+      if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
+      return views.toString();
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+      return `${Math.floor(diffDays / 365)} years ago`;
+    }
+
+    function formatDuration(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function initUserMenu() {
+      const userMenu = document.getElementById('userMenu');
+      const user = getCurrentUser();
+
+      if (user) {
+        userMenu.innerHTML = `
+          <button class="icon-btn" onclick="window.location.href='upload.html'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+          <img src="${user.avatar || 'https://via.placeholder.com/32'}" alt="${user.displayName}" class="user-avatar" onclick="window.location.href='dashboard.html'">
+        `;
+
+        document.getElementById('currentUserAvatar').src = user.avatar || 'https://via.placeholder.com/40';
+      } else {
+        userMenu.innerHTML = `
+          <a href="login.html" class="btn btn-ghost btn-sm">Sign In</a>
+          <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+        `;
+      }
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') {
+        performSearch();
+      }
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (query.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    }
+
+    // Auto-load demo video
+    showDemoVideo();
+  </script>
+</body>
+</html>

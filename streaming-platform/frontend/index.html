@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamVibe - Modern Video Streaming Platform</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .hero-section {
+      background: linear-gradient(135deg, rgba(255, 0, 80, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      padding: var(--spacing-2xl) 0;
+      margin-bottom: var(--spacing-xl);
+      border-radius: var(--radius-xl);
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .section-link {
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .categories {
+      display: flex;
+      gap: var(--spacing-sm);
+      overflow-x: auto;
+      padding-bottom: var(--spacing-sm);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .categories::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .category-chip {
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-full);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 1px solid transparent;
+    }
+
+    .category-chip:hover,
+    .category-chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .trending-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-2xl);
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-md);
+      opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <button class="icon-btn" id="menuBtn" onclick="toggleSidebar()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+        </button>
+        <a href="index.html" class="logo">
+          <div class="logo-icon">SV</div>
+          <span>StreamVibe</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-bar"
+            placeholder="Search videos, channels..."
+            id="searchInput"
+            onkeyup="handleSearch(event)"
+          >
+          <button class="search-btn" onclick="performSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="user-menu" id="userMenu">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <a href="index.html" class="sidebar-link active">
+        <span class="sidebar-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="#trending" class="sidebar-link">
+        <span class="sidebar-icon">🔥</span>
+        <span>Trending</span>
+      </a>
+      <a href="#subscriptions" class="sidebar-link">
+        <span class="sidebar-icon">📺</span>
+        <span>Subscriptions</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Library</div>
+      <a href="history.html" class="sidebar-link">
+        <span class="sidebar-icon">🕐</span>
+        <span>History</span>
+      </a>
+      <a href="watch-later.html" class="sidebar-link">
+        <span class="sidebar-icon">⏰</span>
+        <span>Watch Later</span>
+      </a>
+      <a href="#liked" class="sidebar-link">
+        <span class="sidebar-icon">👍</span>
+        <span>Liked Videos</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Categories</div>
+      <a href="#gaming" class="sidebar-link">
+        <span class="sidebar-icon">🎮</span>
+        <span>Gaming</span>
+      </a>
+      <a href="#music" class="sidebar-link">
+        <span class="sidebar-icon">🎵</span>
+        <span>Music</span>
+      </a>
+      <a href="#tech" class="sidebar-link">
+        <span class="sidebar-icon">💻</span>
+        <span>Technology</span>
+      </a>
+      <a href="#education" class="sidebar-link">
+        <span class="sidebar-icon">📚</span>
+        <span>Education</span>
+      </a>
+      <a href="#entertainment" class="sidebar-link">
+        <span class="sidebar-icon">🎬</span>
+        <span>Entertainment</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Hero Section (shown to new users) -->
+      <div class="hero-section fade-in" id="heroSection">
+        <div class="hero-content">
+          <h1 class="hero-title">Welcome to StreamVibe</h1>
+          <p class="hero-subtitle">
+            Discover amazing content from creators around the world. Watch, share, and create your own videos.
+          </p>
+          <div style="display: flex; gap: var(--spacing-md); justify-content: center;">
+            <a href="signup.html" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="#trending" class="btn btn-outline btn-lg">Explore Videos</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="categories slide-in-up">
+        <div class="category-chip active" data-category="all" onclick="filterByCategory('all')">All</div>
+        <div class="category-chip" data-category="gaming" onclick="filterByCategory('gaming')">🎮 Gaming</div>
+        <div class="category-chip" data-category="music" onclick="filterByCategory('music')">🎵 Music</div>
+        <div class="category-chip" data-category="tech" onclick="filterByCategory('tech')">💻 Technology</div>
+        <div class="category-chip" data-category="education" onclick="filterByCategory('education')">📚 Education</div>
+        <div class="category-chip" data-category="entertainment" onclick="filterByCategory('entertainment')">🎬 Entertainment</div>
+        <div class="category-chip" data-category="sports" onclick="filterByCategory('sports')">⚽ Sports</div>
+        <div class="category-chip" data-category="news" onclick="filterByCategory('news')">📰 News</div>
+      </div>
+
+      <!-- Trending Section -->
+      <section id="trending" class="slide-in-up">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span>🔥</span>
+            Trending Now
+          </h2>
+          <a href="#" class="section-link">
+            View All
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <div class="video-grid" id="trendingVideos">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- Recommended Section -->
+      <section class="slide-in-up">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span>✨</span>
+            Recommended For You
+          </h2>
+          <a href="#" class="section-link">
+            View All
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <div class="video-grid" id="recommendedVideos">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- Recent Uploads Section -->
+      <section class="slide-in-up">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span>🆕</span>
+            Recent Uploads
+          </h2>
+          <a href="#" class="section-link">
+            View All
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <div class="video-grid" id="recentVideos">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      initUserMenu();
+      await loadVideos();
+    });
+
+    function initUserMenu() {
+      const userMenu = document.getElementById('userMenu');
+      const user = getCurrentUser();
+
+      if (user) {
+        // Hide hero section for logged-in users
+        document.getElementById('heroSection').classList.add('hidden');
+
+        userMenu.innerHTML = `
+          <button class="icon-btn" onclick="window.location.href='upload.html'" data-tooltip="Upload Video">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+          <button class="icon-btn" onclick="window.location.href='#notifications'" data-tooltip="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+          <img src="${user.avatar || 'https://via.placeholder.com/32'}" alt="${user.displayName}" class="user-avatar" onclick="toggleUserDropdown()">
+        `;
+      } else {
+        userMenu.innerHTML = `
+          <a href="login.html" class="btn btn-ghost btn-sm">Sign In</a>
+          <a href="signup.html" class="btn btn-primary btn-sm">Sign Up</a>
+        `;
+      }
+    }
+
+    async function loadVideos() {
+      try {
+        // Load trending videos
+        const trending = await api.get('/videos/trending?limit=8');
+        renderVideos('trendingVideos', trending.data, true);
+
+        // Load recommended videos
+        const recommended = await api.get('/videos?sort=popular&limit=12');
+        renderVideos('recommendedVideos', recommended.data.videos);
+
+        // Load recent videos
+        const recent = await api.get('/videos?sort=recent&limit=12');
+        renderVideos('recentVideos', recent.data.videos);
+      } catch (error) {
+        console.error('Failed to load videos:', error);
+        // Show demo videos if API fails
+        showDemoVideos();
+      }
+    }
+
+    function renderVideos(containerId, videos, isTrending = false) {
+      const container = document.getElementById(containerId);
+
+      if (!videos || videos.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📹</div>
+            <p>No videos found</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = videos.map(video => `
+        <div class="video-card">
+          <div class="video-card-thumbnail" onclick="window.location.href='video.html?id=${video.id}'">
+            ${isTrending ? '<div class="trending-badge">🔥 Trending</div>' : ''}
+            <img src="${video.thumbnailUrl || 'https://via.placeholder.com/320x180'}" alt="${video.title}">
+            <div class="video-duration">${formatDuration(video.duration)}</div>
+          </div>
+          <div class="video-card-info">
+            <img src="${video.user?.avatar || 'https://via.placeholder.com/36'}" alt="${video.user?.displayName}" class="video-card-avatar" onclick="window.location.href='profile.html?user=${video.user?.username}'">
+            <div class="video-card-details">
+              <h3 class="video-card-title text-clamp-2">${video.title}</h3>
+              <div class="video-card-channel">${video.user?.displayName || 'Unknown'}</div>
+              <div class="video-card-meta">${formatViews(video.views)} views • ${formatDate(video.uploadedAt)}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showDemoVideos() {
+      const demoVideos = [
+        {
+          id: '1',
+          title: 'Amazing Gaming Montage - Best Moments 2024',
+          thumbnailUrl: 'https://via.placeholder.com/320x180/FF0050/FFFFFF?text=Gaming',
+          duration: 600,
+          views: 125000,
+          uploadedAt: '2024-01-15T10:00:00Z',
+          user: { displayName: 'ProGamer', avatar: 'https://via.placeholder.com/36', username: 'progamer' }
+        },
+        {
+          id: '2',
+          title: 'Learn Web Development in 2024 - Complete Guide',
+          thumbnailUrl: 'https://via.placeholder.com/320x180/8B5CF6/FFFFFF?text=Tutorial',
+          duration: 1800,
+          views: 250000,
+          uploadedAt: '2024-01-14T15:30:00Z',
+          user: { displayName: 'CodeMaster', avatar: 'https://via.placeholder.com/36', username: 'codemaster' }
+        },
+        {
+          id: '3',
+          title: 'Epic Music Mix 2024 🎵 Best of EDM',
+          thumbnailUrl: 'https://via.placeholder.com/320x180/10B981/FFFFFF?text=Music',
+          duration: 3600,
+          views: 500000,
+          uploadedAt: '2024-01-13T12:00:00Z',
+          user: { displayName: 'MusicVibes', avatar: 'https://via.placeholder.com/36', username: 'musicvibes' }
+        }
+      ];
+
+      renderVideos('trendingVideos', demoVideos, true);
+      renderVideos('recommendedVideos', [...demoVideos, ...demoVideos]);
+      renderVideos('recentVideos', [...demoVideos, ...demoVideos]);
+    }
+
+    function formatDuration(seconds) {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+      return `${minutes}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function formatViews(views) {
+      if (views >= 1000000) {
+        return (views / 1000000).toFixed(1) + 'M';
+      }
+      if (views >= 1000) {
+        return (views / 1000).toFixed(1) + 'K';
+      }
+      return views.toString();
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+      if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+      return `${Math.floor(diffDays / 365)} years ago`;
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function filterByCategory(category) {
+      // Update active state
+      document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Filter videos (would typically call API)
+      console.log('Filtering by category:', category);
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') {
+        performSearch();
+      }
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (query.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    }
+
+    // Load demo videos on initial load
+    showDemoVideos();
+  </script>
+</body>
+</html>
