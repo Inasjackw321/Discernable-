@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Video - StreamVibe</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .upload-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .verification-required {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+      border: 2px solid var(--error);
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-xl);
+      text-align: center;
+      animation: shake 0.5s ease;
+    }
+
+    .verification-required-icon {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .verification-progress-container {
+      max-width: 600px;
+      margin: var(--spacing-xl) auto;
+    }
+
+    .progress-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .progress-item-info {
+      flex: 1;
+    }
+
+    .progress-item-label {
+      font-weight: 500;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .progress-item-status {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .progress-item-check {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .progress-item-check.complete {
+      background: var(--success);
+      color: white;
+    }
+
+    .progress-item-check.incomplete {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+    }
+
+    .upload-dropzone {
+      border: 3px dashed var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-2xl);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      background: var(--bg-secondary);
+    }
+
+    .upload-dropzone:hover {
+      border-color: var(--primary);
+      background: var(--bg-hover);
+      transform: translateY(-4px);
+    }
+
+    .upload-dropzone.drag-over {
+      border-color: var(--primary);
+      background: rgba(255, 0, 80, 0.05);
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-md);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .upload-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .upload-hint {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .file-info {
+      background: var(--bg-secondary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .file-preview {
+      width: 100%;
+      max-height: 400px;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-md);
+      background: #000;
+    }
+
+    .upload-progress {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-sm);
+      font-size: 0.9rem;
+    }
+
+    .progress-bar-container {
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.3s ease;
+      animation: shimmer 2s infinite;
+    }
+
+    .form-section {
+      background: var(--bg-secondary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .form-section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .thumbnail-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .thumbnail-option {
+      aspect-ratio: 16/9;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      overflow: hidden;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .thumbnail-option:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .thumbnail-option.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 0, 80, 0.2);
+    }
+
+    .thumbnail-option img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thumbnail-upload-btn {
+      aspect-ratio: 16/9;
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--bg-tertiary);
+    }
+
+    .thumbnail-upload-btn:hover {
+      border-color: var(--primary);
+      background: var(--bg-hover);
+    }
+
+    .tag-input-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      min-height: 60px;
+    }
+
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      background: var(--primary);
+      color: white;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      animation: scaleIn 0.2s ease;
+    }
+
+    .tag-remove {
+      cursor: pointer;
+      font-weight: 700;
+      opacity: 0.8;
+      transition: opacity var(--transition-fast);
+    }
+
+    .tag-remove:hover {
+      opacity: 1;
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 150px;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: var(--spacing-xs);
+      color: var(--text-primary);
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: flex-end;
+      padding-top: var(--spacing-lg);
+    }
+
+    @media (max-width: 768px) {
+      .upload-actions {
+        flex-direction: column-reverse;
+      }
+
+      .upload-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <button class="icon-btn" onclick="window.location.href='dashboard.html'">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
+          </svg>
+        </button>
+        <a href="index.html" class="logo">
+          <div class="logo-icon">SV</div>
+          <span>StreamVibe</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <h2 style="margin: 0;">Upload Video</h2>
+      </div>
+
+      <div class="navbar-right">
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content full-width">
+    <div class="container upload-container">
+      <!-- Verification Required Warning -->
+      <div class="verification-required fade-in" id="verificationWarning" style="display: none;">
+        <div class="verification-required-icon">🔒</div>
+        <h2>Verification Required to Upload</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-xl);">
+          To maintain quality and prevent spam, only verified creators can upload videos.<br>
+          Become verified by reaching one of these milestones:
+        </p>
+
+        <div class="verification-progress-container">
+          <div class="progress-item">
+            <div class="progress-item-info">
+              <div class="progress-item-label">1,000 Subscribers</div>
+              <div class="progress-item-status" id="subsProgress">0 / 1,000 subscribers</div>
+            </div>
+            <div class="progress-item-check incomplete" id="subsCheck">○</div>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-item-info">
+              <div class="progress-item-label">10,000 Total Views</div>
+              <div class="progress-item-status" id="viewsProgress">0 / 10,000 views</div>
+            </div>
+            <div class="progress-item-check incomplete" id="viewsCheck">○</div>
+          </div>
+        </div>
+
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: var(--spacing-xl);">
+          💡 Tip: Engage with the community, comment on videos, and build your presence to grow faster!
+        </p>
+
+        <div style="margin-top: var(--spacing-xl);">
+          <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Form -->
+      <div id="uploadForm" style="display: none;">
+        <!-- Dropzone -->
+        <div class="upload-dropzone scale-in" id="dropzone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">🎬</div>
+          <div class="upload-text">Drop your video here or click to browse</div>
+          <div class="upload-hint">Supported formats: MP4, WebM, MOV (Max 500MB)</div>
+          <input type="file" id="fileInput" accept="video/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <!-- File Info (hidden initially) -->
+        <div id="fileInfoSection" style="display: none;">
+          <!-- Upload Progress -->
+          <div class="upload-progress" id="uploadProgress" style="display: none;">
+            <div class="file-info">
+              <h3 style="margin-bottom: var(--spacing-md);">Uploading...</h3>
+              <div class="progress-info">
+                <span id="progressText">0%</span>
+                <span id="progressSize">0 MB / 0 MB</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Preview -->
+          <div class="file-info slide-in-up">
+            <video id="videoPreview" class="file-preview" controls></video>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600; margin-bottom: 4px;" id="fileName">video.mp4</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);" id="fileSize">0 MB</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="resetUpload()">Change Video</button>
+            </div>
+          </div>
+
+          <!-- Video Details -->
+          <div class="form-section slide-in-up" style="animation-delay: 0.1s;">
+            <h3 class="form-section-title">Video Details</h3>
+
+            <div class="form-group">
+              <label class="form-label" for="videoTitle">Title *</label>
+              <input
+                type="text"
+                id="videoTitle"
+                class="form-input"
+                placeholder="Give your video a catchy title"
+                maxlength="100"
+                required
+              >
+              <p class="form-help"><span id="titleCount">0</span>/100 characters</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="videoDescription">Description</label>
+              <textarea
+                id="videoDescription"
+                class="form-textarea"
+                placeholder="Tell viewers about your video"
+                rows="6"
+                maxlength="5000"
+              ></textarea>
+              <p class="form-help"><span id="descCount">0</span>/5000 characters</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Tags</label>
+              <div class="tag-input-container" id="tagContainer" onclick="document.getElementById('tagInput').focus()">
+                <input
+                  type="text"
+                  id="tagInput"
+                  class="tag-input"
+                  placeholder="Add tags (press Enter)"
+                  onkeydown="handleTagInput(event)"
+                >
+              </div>
+              <p class="form-help">Add up to 20 tags to help people find your video</p>
+            </div>
+          </div>
+
+          <!-- Thumbnail -->
+          <div class="form-section slide-in-up" style="animation-delay: 0.2s;">
+            <h3 class="form-section-title">Thumbnail</h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+              Select a thumbnail or upload your own (16:9 aspect ratio recommended)
+            </p>
+
+            <div class="thumbnail-options" id="thumbnailOptions">
+              <!-- Thumbnails will be generated here -->
+            </div>
+
+            <div class="thumbnail-upload-btn" onclick="document.getElementById('thumbnailInput').click()">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span style="margin-top: var(--spacing-sm); font-size: 0.9rem;">Upload Custom</span>
+              <input type="file" id="thumbnailInput" accept="image/*" style="display: none;" onchange="handleThumbnailUpload(event)">
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="form-section slide-in-up" style="animation-delay: 0.3s;">
+            <h3 class="form-section-title">Settings</h3>
+
+            <div class="form-group">
+              <label class="form-label" for="category">Category *</label>
+              <select id="category" class="form-input" required>
+                <option value="">Select a category</option>
+                <option value="gaming">Gaming</option>
+                <option value="music">Music</option>
+                <option value="tech">Technology</option>
+                <option value="education">Education</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="sports">Sports</option>
+                <option value="news">News & Politics</option>
+                <option value="vlogs">Vlogs</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="visibility">Visibility</label>
+              <select id="visibility" class="form-input">
+                <option value="public">Public - Anyone can view</option>
+                <option value="unlisted">Unlisted - Only people with the link</option>
+                <option value="private">Private - Only you</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-checkbox">
+                <input type="checkbox" id="commentsEnabled" checked>
+                <span>Allow comments</span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label class="form-checkbox">
+                <input type="checkbox" id="likeCountVisible" checked>
+                <span>Show like count</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="upload-actions slide-in-up" style="animation-delay: 0.4s;">
+            <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
+            <button class="btn btn-primary btn-lg" onclick="publishVideo()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="10 8 16 12 10 16 10 8"/>
+              </svg>
+              Publish Video
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let currentUser = null;
+    let selectedFile = null;
+    let selectedThumbnail = null;
+    let tags = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireAuth()) return;
+
+      currentUser = getCurrentUser();
+      initializeUserMenu();
+      checkVerification();
+      setupDragAndDrop();
+    });
+
+    function checkVerification() {
+      const subscribers = currentUser.subscribers || 0;
+      const totalViews = currentUser.totalViews || 0;
+      const isVerified = subscribers >= 1000 || totalViews >= 10000;
+
+      if (isVerified) {
+        document.getElementById('uploadForm').style.display = 'block';
+      } else {
+        document.getElementById('verificationWarning').style.display = 'block';
+
+        // Update progress
+        document.getElementById('subsProgress').textContent = `${formatNumber(subscribers)} / 1,000 subscribers`;
+        document.getElementById('viewsProgress').textContent = `${formatNumber(totalViews)} / 10,000 views`;
+
+        // Check completion
+        if (subscribers >= 1000) {
+          document.getElementById('subsCheck').textContent = '✓';
+          document.getElementById('subsCheck').classList.remove('incomplete');
+          document.getElementById('subsCheck').classList.add('complete');
+        }
+
+        if (totalViews >= 10000) {
+          document.getElementById('viewsCheck').textContent = '✓';
+          document.getElementById('viewsCheck').classList.remove('incomplete');
+          document.getElementById('viewsCheck').classList.add('complete');
+        }
+      }
+    }
+
+    function setupDragAndDrop() {
+      const dropzone = document.getElementById('dropzone');
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('drag-over');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('drag-over');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('drag-over');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        handleFile(file);
+      }
+    }
+
+    function handleFile(file) {
+      // Validate file
+      const validation = validateVideoFile(file);
+      if (!validation.valid) {
+        showNotification(validation.error, 'error');
+        return;
+      }
+
+      selectedFile = file;
+
+      // Show file info
+      document.getElementById('dropzone').style.display = 'none';
+      document.getElementById('fileInfoSection').style.display = 'block';
+
+      // Update file info
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatFileSize(file.size);
+
+      // Load video preview
+      const videoPreview = document.getElementById('videoPreview');
+      videoPreview.src = URL.createObjectURL(file);
+
+      // Generate thumbnails
+      videoPreview.addEventListener('loadeddata', () => {
+        generateThumbnails(videoPreview);
+      }, { once: true });
+
+      // Setup character counters
+      document.getElementById('videoTitle').addEventListener('input', (e) => {
+        document.getElementById('titleCount').textContent = e.target.value.length;
+      });
+
+      document.getElementById('videoDescription').addEventListener('input', (e) => {
+        document.getElementById('descCount').textContent = e.target.value.length;
+      });
+    }
+
+    function generateThumbnails(video) {
+      const container = document.getElementById('thumbnailOptions');
+      const times = [1, video.duration / 4, video.duration / 2, (video.duration / 4) * 3];
+
+      times.forEach((time, index) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        video.currentTime = time;
+
+        video.addEventListener('seeked', () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+
+          const div = document.createElement('div');
+          div.className = 'thumbnail-option';
+          if (index === 0) {
+            div.classList.add('selected');
+            selectedThumbnail = canvas.toDataURL('image/jpeg');
+          }
+
+          const img = document.createElement('img');
+          img.src = canvas.toDataURL('image/jpeg');
+          div.appendChild(img);
+
+          div.onclick = () => {
+            document.querySelectorAll('.thumbnail-option').forEach(t => t.classList.remove('selected'));
+            div.classList.add('selected');
+            selectedThumbnail = img.src;
+          };
+
+          container.appendChild(div);
+        }, { once: true });
+      });
+    }
+
+    function handleThumbnailUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        showNotification(validation.error, 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const container = document.getElementById('thumbnailOptions');
+        const div = document.createElement('div');
+        div.className = 'thumbnail-option selected';
+
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        div.appendChild(img);
+
+        div.onclick = () => {
+          document.querySelectorAll('.thumbnail-option').forEach(t => t.classList.remove('selected'));
+          div.classList.add('selected');
+          selectedThumbnail = img.src;
+        };
+
+        // Deselect others
+        document.querySelectorAll('.thumbnail-option').forEach(t => t.classList.remove('selected'));
+
+        container.appendChild(div);
+        selectedThumbnail = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function handleTagInput(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const input = event.target;
+        const tag = input.value.trim().toLowerCase();
+
+        if (tag && tags.length < 20 && !tags.includes(tag)) {
+          tags.push(tag);
+          renderTags();
+          input.value = '';
+        } else if (tags.length >= 20) {
+          showNotification('Maximum 20 tags allowed', 'warning');
+        }
+      }
+    }
+
+    function renderTags() {
+      const container = document.getElementById('tagContainer');
+      const input = document.getElementById('tagInput');
+
+      // Remove old tags
+      container.querySelectorAll('.tag-item').forEach(tag => tag.remove());
+
+      // Add new tags
+      tags.forEach((tag, index) => {
+        const tagEl = document.createElement('div');
+        tagEl.className = 'tag-item';
+        tagEl.innerHTML = `
+          <span>${tag}</span>
+          <span class="tag-remove" onclick="removeTag(${index})">×</span>
+        `;
+        container.insertBefore(tagEl, input);
+      });
+    }
+
+    function removeTag(index) {
+      tags.splice(index, 1);
+      renderTags();
+    }
+
+    function resetUpload() {
+      selectedFile = null;
+      selectedThumbnail = null;
+      tags = [];
+
+      document.getElementById('dropzone').style.display = 'block';
+      document.getElementById('fileInfoSection').style.display = 'none';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('videoTitle').value = '';
+      document.getElementById('videoDescription').value = '';
+      document.getElementById('thumbnailOptions').innerHTML = '';
+    }
+
+    async function publishVideo() {
+      if (!selectedFile) {
+        showNotification('Please select a video file', 'error');
+        return;
+      }
+
+      const title = document.getElementById('videoTitle').value.trim();
+      if (!title) {
+        showNotification('Please enter a video title', 'error');
+        return;
+      }
+
+      const category = document.getElementById('category').value;
+      if (!category) {
+        showNotification('Please select a category', 'error');
+        return;
+      }
+
+      showLoadingOverlay('Publishing your video...');
+
+      // Simulate upload
+      setTimeout(() => {
+        hideLoadingOverlay();
+        showNotification('Video published successfully!', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 2000);
+      }, 3000);
+
+      // In real implementation:
+      // const formData = new FormData();
+      // formData.append('video', selectedFile);
+      // formData.append('thumbnail', selectedThumbnail);
+      // formData.append('title', title);
+      // formData.append('description', description);
+      // formData.append('tags', JSON.stringify(tags));
+      // formData.append('category', category);
+      // await api.upload('/videos', formData, updateProgress);
+    }
+
+    function saveDraft() {
+      showNotification('Draft saved!', 'success');
+    }
+
+    function updateProgress(percent) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = Math.round(percent) + '%';
+    }
+  </script>
+</body>
+</html>

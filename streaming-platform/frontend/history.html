@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch History - StreamVibe</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xl);
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+    }
+
+    .history-title {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: var(--spacing-md);
+    }
+
+    .history-stats {
+      display: flex;
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+      padding: var(--spacing-lg);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+    }
+
+    .history-stat {
+      text-align: center;
+    }
+
+    .history-stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .history-stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .history-group {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .history-group-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: var(--spacing-md);
+      color: var(--text-secondary);
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-md);
+      border: 1px solid var(--border-color);
+      transition: all var(--transition-fast);
+    }
+
+    .history-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .history-thumbnail {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      background: var(--bg-tertiary);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .watch-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .watch-progress-bar {
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .history-info {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .history-video-title {
+      font-weight: 500;
+      margin-bottom: var(--spacing-xs);
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .history-video-title:hover {
+      color: var(--primary);
+    }
+
+    .history-channel {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .history-meta {
+      color: var(--text-tertiary);
+      font-size: 0.85rem;
+    }
+
+    .history-actions-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+
+    .empty-history {
+      text-align: center;
+      padding: var(--spacing-2xl);
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 5rem;
+      margin-bottom: var(--spacing-md);
+      opacity: 0.3;
+    }
+
+    @media (max-width: 768px) {
+      .history-item {
+        grid-template-columns: 120px 1fr;
+        gap: var(--spacing-sm);
+      }
+
+      .history-actions-btn {
+        display: none;
+      }
+
+      .history-stats {
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <button class="icon-btn" id="menuBtn" onclick="toggleSidebar()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+        </button>
+        <a href="index.html" class="logo">
+          <div class="logo-icon">SV</div>
+          <span>StreamVibe</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <div class="search-container">
+          <input type="text" class="search-bar" placeholder="Search videos, channels..." id="searchInput" onkeyup="handleSearch(event)">
+          <button class="search-btn" onclick="performSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <a href="index.html" class="sidebar-link">
+        <span class="sidebar-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="#trending" class="sidebar-link">
+        <span class="sidebar-icon">🔥</span>
+        <span>Trending</span>
+      </a>
+      <a href="#subscriptions" class="sidebar-link">
+        <span class="sidebar-icon">📺</span>
+        <span>Subscriptions</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Library</div>
+      <a href="history.html" class="sidebar-link active">
+        <span class="sidebar-icon">🕐</span>
+        <span>History</span>
+      </a>
+      <a href="watch-later.html" class="sidebar-link">
+        <span class="sidebar-icon">⏰</span>
+        <span>Watch Later</span>
+      </a>
+      <a href="#liked" class="sidebar-link">
+        <span class="sidebar-icon">👍</span>
+        <span>Liked Videos</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Header -->
+      <div class="history-header fade-in">
+        <h1 class="history-title">Watch History</h1>
+        <div class="history-actions">
+          <button class="btn btn-outline" onclick="searchHistory()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            Search
+          </button>
+          <button class="btn btn-outline" onclick="clearHistory()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="history-stats slide-in-up">
+        <div class="history-stat">
+          <div class="history-stat-value" id="totalVideos">0</div>
+          <div class="history-stat-label">Videos Watched</div>
+        </div>
+        <div class="history-stat">
+          <div class="history-stat-value" id="totalWatchTime">0h</div>
+          <div class="history-stat-label">Watch Time</div>
+        </div>
+        <div class="history-stat">
+          <div class="history-stat-value" id="avgPerDay">0</div>
+          <div class="history-stat-label">Avg. per Day</div>
+        </div>
+      </div>
+
+      <!-- History List -->
+      <div id="historyContainer">
+        <!-- History items will be loaded here -->
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireAuth()) return;
+
+      initializeUserMenu();
+      loadHistory();
+    });
+
+    async function loadHistory() {
+      try {
+        // In real app: const response = await api.get('/playlists/history');
+
+        // Demo data
+        const historyData = {
+          today: [
+            {
+              id: '1',
+              title: 'Amazing Tutorial - Complete Guide 2024',
+              thumbnail: 'https://via.placeholder.com/200x112',
+              channel: 'TechGuru',
+              views: 125000,
+              watchedAt: '2024-01-15T18:30:00Z',
+              watchProgress: 75,
+              duration: 600
+            },
+            {
+              id: '2',
+              title: 'Epic Gaming Montage - Best Moments',
+              thumbnail: 'https://via.placeholder.com/200x112',
+              channel: 'ProGamer',
+              views: 50000,
+              watchedAt: '2024-01-15T15:20:00Z',
+              watchProgress: 100,
+              duration: 480
+            }
+          ],
+          yesterday: [
+            {
+              id: '3',
+              title: 'Music Mix 2024 - Best Songs',
+              thumbnail: 'https://via.placeholder.com/200x112',
+              channel: 'MusicVibes',
+              views: 500000,
+              watchedAt: '2024-01-14T20:00:00Z',
+              watchProgress: 45,
+              duration: 3600
+            }
+          ],
+          thisWeek: [
+            {
+              id: '4',
+              title: 'How to Code Like a Pro',
+              thumbnail: 'https://via.placeholder.com/200x112',
+              channel: 'CodeMaster',
+              views: 75000,
+              watchedAt: '2024-01-12T14:00:00Z',
+              watchProgress: 90,
+              duration: 1200
+            }
+          ]
+        };
+
+        // Calculate stats
+        const allVideos = [...historyData.today, ...historyData.yesterday, ...historyData.thisWeek];
+        const totalVideos = allVideos.length;
+        const totalWatchTime = allVideos.reduce((sum, v) => sum + (v.duration * v.watchProgress / 100), 0);
+        const avgPerDay = Math.round(totalVideos / 7);
+
+        animateNumber('totalVideos', totalVideos);
+        document.getElementById('totalWatchTime').textContent = Math.round(totalWatchTime / 3600) + 'h';
+        animateNumber('avgPerDay', avgPerDay);
+
+        renderHistory(historyData);
+      } catch (error) {
+        console.error('Failed to load history:', error);
+        showEmptyState();
+      }
+    }
+
+    function renderHistory(data) {
+      const container = document.getElementById('historyContainer');
+
+      const groups = [
+        { title: 'Today', items: data.today },
+        { title: 'Yesterday', items: data.yesterday },
+        { title: 'This Week', items: data.thisWeek }
+      ];
+
+      const html = groups.map(group => {
+        if (!group.items || group.items.length === 0) return '';
+
+        return `
+          <div class="history-group slide-in-up">
+            <h2 class="history-group-title">${group.title}</h2>
+            ${group.items.map(video => `
+              <div class="history-item">
+                <div class="history-thumbnail" onclick="window.location.href='video.html?id=${video.id}'">
+                  <img src="${video.thumbnail}" alt="${video.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
+                  <div class="watch-progress">
+                    <div class="watch-progress-bar" style="width: ${video.watchProgress}%"></div>
+                  </div>
+                  <div class="video-duration">${formatDuration(video.duration)}</div>
+                </div>
+                <div class="history-info">
+                  <div class="history-video-title text-clamp-2" onclick="window.location.href='video.html?id=${video.id}'">${video.title}</div>
+                  <div class="history-channel">${video.channel}</div>
+                  <div class="history-meta">
+                    ${formatNumber(video.views)} views • Watched ${formatRelativeTime(video.watchedAt)} • ${video.watchProgress}% complete
+                  </div>
+                </div>
+                <div class="history-actions-btn">
+                  <button class="btn btn-sm btn-outline" onclick="resumeVideo('${video.id}', ${video.watchProgress})">
+                    Resume
+                  </button>
+                  <button class="btn btn-sm btn-ghost" onclick="removeFromHistory('${video.id}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html || showEmptyState();
+    }
+
+    function showEmptyState() {
+      return `
+        <div class="empty-history fade-in">
+          <div class="empty-icon">🕐</div>
+          <h2>No watch history yet</h2>
+          <p>Videos you watch will appear here</p>
+          <button class="btn btn-primary" style="margin-top: var(--spacing-lg);" onclick="window.location.href='index.html'">
+            Explore Videos
+          </button>
+        </div>
+      `;
+    }
+
+    function animateNumber(elementId, targetValue) {
+      const element = document.getElementById(elementId);
+      let currentValue = 0;
+      const duration = 1000;
+      const steps = 30;
+      const increment = targetValue / steps;
+      const stepDuration = duration / steps;
+
+      const timer = setInterval(() => {
+        currentValue += increment;
+        if (currentValue >= targetValue) {
+          currentValue = targetValue;
+          clearInterval(timer);
+        }
+        element.textContent = Math.floor(currentValue);
+      }, stepDuration);
+    }
+
+    function resumeVideo(id, progress) {
+      window.location.href = `video.html?id=${id}&t=${progress}`;
+    }
+
+    function removeFromHistory(id) {
+      if (confirm('Remove this video from your history?')) {
+        showNotification('Removed from history', 'success');
+        loadHistory();
+      }
+    }
+
+    function clearHistory() {
+      if (confirm('Are you sure you want to clear your entire watch history? This action cannot be undone.')) {
+        showNotification('History cleared', 'success');
+        document.getElementById('historyContainer').innerHTML = showEmptyState();
+        document.getElementById('totalVideos').textContent = '0';
+        document.getElementById('totalWatchTime').textContent = '0h';
+        document.getElementById('avgPerDay').textContent = '0';
+      }
+    }
+
+    function searchHistory() {
+      const query = prompt('Search your history:');
+      if (query) {
+        showNotification('Search functionality coming soon!', 'info');
+      }
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') performSearch();
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (query.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    }
+  </script>
+</body>
+</html>

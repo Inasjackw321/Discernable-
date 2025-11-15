@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watch Later - StreamVibe</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .playlist-header {
+      background: linear-gradient(135deg, rgba(255, 0, 80, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--spacing-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xl);
+    }
+
+    .playlist-icon {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .playlist-info {
+      flex: 1;
+    }
+
+    .playlist-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .playlist-stats {
+      display: flex;
+      gap: var(--spacing-xl);
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .playlist-actions {
+      display: flex;
+      gap: var(--spacing-md);
+    }
+
+    .video-grid-playlist {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+    }
+
+    .playlist-video-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      transition: all var(--transition-base);
+      position: relative;
+    }
+
+    .playlist-video-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary);
+    }
+
+    .playlist-video-thumbnail {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-tertiary);
+      cursor: pointer;
+    }
+
+    .playlist-video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      cursor: pointer;
+      opacity: 0;
+      transition: all var(--transition-fast);
+    }
+
+    .playlist-video-card:hover .remove-btn {
+      opacity: 1;
+    }
+
+    .remove-btn:hover {
+      background: var(--error);
+      transform: scale(1.1);
+    }
+
+    .playlist-video-info {
+      padding: var(--spacing-md);
+    }
+
+    .playlist-video-title {
+      font-weight: 500;
+      margin-bottom: var(--spacing-sm);
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+
+    .playlist-video-title:hover {
+      color: var(--primary);
+    }
+
+    .playlist-video-channel {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .playlist-video-meta {
+      color: var(--text-tertiary);
+      font-size: 0.85rem;
+    }
+
+    .playlist-video-actions {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .empty-playlist {
+      text-align: center;
+      padding: var(--spacing-2xl) * 2;
+      color: var(--text-secondary);
+    }
+
+    .empty-icon {
+      font-size: 6rem;
+      margin-bottom: var(--spacing-md);
+      opacity: 0.3;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @media (max-width: 768px) {
+      .playlist-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .playlist-title {
+        font-size: 2rem;
+      }
+
+      .playlist-stats {
+        justify-content: center;
+      }
+
+      .playlist-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .playlist-actions .btn {
+        width: 100%;
+      }
+
+      .video-grid-playlist {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <button class="icon-btn" id="menuBtn" onclick="toggleSidebar()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+        </button>
+        <a href="index.html" class="logo">
+          <div class="logo-icon">SV</div>
+          <span>StreamVibe</span>
+        </a>
+      </div>
+
+      <div class="navbar-center">
+        <div class="search-container">
+          <input type="text" class="search-bar" placeholder="Search videos, channels..." id="searchInput" onkeyup="handleSearch(event)">
+          <button class="search-btn" onclick="performSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div class="user-menu" id="userMenu"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <a href="index.html" class="sidebar-link">
+        <span class="sidebar-icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a href="#trending" class="sidebar-link">
+        <span class="sidebar-icon">🔥</span>
+        <span>Trending</span>
+      </a>
+      <a href="#subscriptions" class="sidebar-link">
+        <span class="sidebar-icon">📺</span>
+        <span>Subscriptions</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Library</div>
+      <a href="history.html" class="sidebar-link">
+        <span class="sidebar-icon">🕐</span>
+        <span>History</span>
+      </a>
+      <a href="watch-later.html" class="sidebar-link active">
+        <span class="sidebar-icon">⏰</span>
+        <span>Watch Later</span>
+      </a>
+      <a href="#liked" class="sidebar-link">
+        <span class="sidebar-icon">👍</span>
+        <span>Liked Videos</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Playlist Header -->
+      <div class="playlist-header fade-in">
+        <div class="playlist-icon">⏰</div>
+        <div class="playlist-info">
+          <h1 class="playlist-title">Watch Later</h1>
+          <div class="playlist-stats">
+            <span><strong id="videoCount">0</strong> videos</span>
+            <span>•</span>
+            <span><strong id="totalDuration">0 minutes</strong> total</span>
+            <span>•</span>
+            <span>Last updated <strong id="lastUpdated">recently</strong></span>
+          </div>
+          <div class="playlist-actions">
+            <button class="btn btn-primary" onclick="playAll()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Play All
+            </button>
+            <button class="btn btn-outline" onclick="shufflePlaylist()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 3 21 3 21 8"/>
+                <line x1="4" y1="20" x2="21" y2="3"/>
+                <polyline points="21 16 21 21 16 21"/>
+                <line x1="15" y1="15" x2="21" y2="21"/>
+                <line x1="4" y1="4" x2="9" y2="9"/>
+              </svg>
+              Shuffle
+            </button>
+            <button class="btn btn-outline" onclick="sharePlaylist()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Share
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Grid -->
+      <div class="video-grid-playlist" id="playlistContainer">
+        <!-- Videos will be loaded here -->
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let playlistVideos = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireAuth()) return;
+
+      initializeUserMenu();
+      loadWatchLater();
+    });
+
+    async function loadWatchLater() {
+      try {
+        // In real app: const response = await api.get('/playlists/watch-later');
+
+        // Demo data
+        playlistVideos = [
+          {
+            id: '1',
+            title: 'Complete Python Tutorial for Beginners - Full Course',
+            thumbnail: 'https://via.placeholder.com/320x180/FF0050/FFFFFF?text=Python+Tutorial',
+            channel: 'CodeMaster',
+            views: 250000,
+            duration: 7200,
+            addedAt: '2024-01-15T10:00:00Z'
+          },
+          {
+            id: '2',
+            title: 'Advanced JavaScript Concepts You Must Know',
+            thumbnail: 'https://via.placeholder.com/320x180/8B5CF6/FFFFFF?text=JavaScript',
+            channel: 'WebDev Pro',
+            views: 180000,
+            duration: 3600,
+            addedAt: '2024-01-14T15:00:00Z'
+          },
+          {
+            id: '3',
+            title: 'React + Next.js Full Stack App Tutorial',
+            thumbnail: 'https://via.placeholder.com/320x180/10B981/FFFFFF?text=React+Next.js',
+            channel: 'Frontend Focus',
+            views: 320000,
+            duration: 5400,
+            addedAt: '2024-01-13T20:00:00Z'
+          },
+          {
+            id: '4',
+            title: 'Docker & Kubernetes - DevOps Complete Guide',
+            thumbnail: 'https://via.placeholder.com/320x180/F59E0B/FFFFFF?text=Docker+K8s',
+            channel: 'DevOps Guru',
+            views: 150000,
+            duration: 4800,
+            addedAt: '2024-01-12T12:00:00Z'
+          },
+          {
+            id: '5',
+            title: 'System Design Interview Preparation - Netflix Architecture',
+            thumbnail: 'https://via.placeholder.com/320x180/3B82F6/FFFFFF?text=System+Design',
+            channel: 'Tech Interview',
+            views: 420000,
+            duration: 2700,
+            addedAt: '2024-01-11T09:00:00Z'
+          },
+          {
+            id: '6',
+            title: 'Machine Learning Fundamentals with TensorFlow',
+            thumbnail: 'https://via.placeholder.com/320x180/EF4444/FFFFFF?text=ML+TensorFlow',
+            channel: 'AI Academy',
+            views: 280000,
+            duration: 6000,
+            addedAt: '2024-01-10T14:00:00Z'
+          }
+        ];
+
+        // Update stats
+        document.getElementById('videoCount').textContent = playlistVideos.length;
+
+        const totalMinutes = Math.round(playlistVideos.reduce((sum, v) => sum + v.duration, 0) / 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        document.getElementById('totalDuration').textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes} minutes`;
+
+        if (playlistVideos.length > 0) {
+          document.getElementById('lastUpdated').textContent = formatRelativeTime(playlistVideos[0].addedAt);
+        }
+
+        renderPlaylist();
+      } catch (error) {
+        console.error('Failed to load watch later:', error);
+        showEmptyState();
+      }
+    }
+
+    function renderPlaylist() {
+      const container = document.getElementById('playlistContainer');
+
+      if (playlistVideos.length === 0) {
+        container.innerHTML = showEmptyState();
+        return;
+      }
+
+      container.innerHTML = playlistVideos.map((video, index) => `
+        <div class="playlist-video-card scale-in" style="animation-delay: ${index * 0.05}s;">
+          <div class="playlist-video-thumbnail" onclick="playVideo('${video.id}')">
+            <img src="${video.thumbnail}" alt="${video.title}">
+            <div class="video-duration">${formatDuration(video.duration)}</div>
+            <div class="remove-btn" onclick="event.stopPropagation(); removeVideo('${video.id}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </div>
+          </div>
+          <div class="playlist-video-info">
+            <div class="playlist-video-title text-clamp-2" onclick="playVideo('${video.id}')">${video.title}</div>
+            <div class="playlist-video-channel">${video.channel}</div>
+            <div class="playlist-video-meta">${formatNumber(video.views)} views • Added ${formatRelativeTime(video.addedAt)}</div>
+          </div>
+          <div class="playlist-video-actions">
+            <button class="btn btn-sm btn-ghost" onclick="moveToTop('${video.id}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+              Move to top
+            </button>
+            <button class="btn btn-sm btn-ghost" onclick="addToQueue('${video.id}')">
+              Queue
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showEmptyState() {
+      return `
+        <div class="empty-playlist fade-in" style="grid-column: 1/-1;">
+          <div class="empty-icon">⏰</div>
+          <h2>Your Watch Later playlist is empty</h2>
+          <p style="margin-bottom: var(--spacing-xl);">Save videos to watch them later</p>
+          <button class="btn btn-primary" onclick="window.location.href='index.html'">
+            Browse Videos
+          </button>
+        </div>
+      `;
+    }
+
+    function playVideo(id) {
+      window.location.href = `video.html?id=${id}`;
+    }
+
+    function removeVideo(id) {
+      playlistVideos = playlistVideos.filter(v => v.id !== id);
+      showNotification('Removed from Watch Later', 'success');
+      loadWatchLater();
+      renderPlaylist();
+    }
+
+    function playAll() {
+      if (playlistVideos.length === 0) {
+        showNotification('Playlist is empty', 'warning');
+        return;
+      }
+      playVideo(playlistVideos[0].id);
+    }
+
+    function shufflePlaylist() {
+      if (playlistVideos.length === 0) {
+        showNotification('Playlist is empty', 'warning');
+        return;
+      }
+
+      playlistVideos = playlistVideos.sort(() => Math.random() - 0.5);
+      showNotification('Playlist shuffled!', 'success');
+      renderPlaylist();
+    }
+
+    function sharePlaylist() {
+      copyToClipboard(window.location.href);
+      showNotification('Playlist link copied!', 'success');
+    }
+
+    function moveToTop(id) {
+      const index = playlistVideos.findIndex(v => v.id === id);
+      if (index > 0) {
+        const video = playlistVideos.splice(index, 1)[0];
+        playlistVideos.unshift(video);
+        showNotification('Moved to top', 'success');
+        renderPlaylist();
+      }
+    }
+
+    function addToQueue(id) {
+      showNotification('Added to queue', 'success');
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') performSearch();
+    }
+
+    function performSearch() {
+      const query = document.getElementById('searchInput').value;
+      if (query.trim()) {
+        window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+      }
+    }
+  </script>
+</body>
+</html>

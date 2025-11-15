@@ -197,6 +197,63 @@ function getPasswordStrength(password) {
 }
 
 /**
+ * Check if user is verified (can upload videos)
+ * Users become verified with 1000+ subscribers OR 10000+ views
+ */
+function isVerified(user = null) {
+  const currentUser = user || getCurrentUser();
+  if (!currentUser) return false;
+
+  const subscribers = currentUser.subscribers || 0;
+  const totalViews = currentUser.totalViews || 0;
+
+  return subscribers >= 1000 || totalViews >= 10000;
+}
+
+/**
+ * Get verification progress
+ */
+function getVerificationProgress(user = null) {
+  const currentUser = user || getCurrentUser();
+  if (!currentUser) return { verified: false, progress: 0 };
+
+  const subscribers = currentUser.subscribers || 0;
+  const totalViews = currentUser.totalViews || 0;
+
+  const subsProgress = (subscribers / 1000) * 100;
+  const viewsProgress = (totalViews / 10000) * 100;
+
+  return {
+    verified: isVerified(currentUser),
+    subscribers,
+    totalViews,
+    subsProgress: Math.min(subsProgress, 100),
+    viewsProgress: Math.min(viewsProgress, 100),
+    overallProgress: Math.max(subsProgress, viewsProgress),
+    subsNeeded: Math.max(0, 1000 - subscribers),
+    viewsNeeded: Math.max(0, 10000 - totalViews)
+  };
+}
+
+/**
+ * Initialize demo user with stats
+ * This simulates having a user with some stats for demonstration
+ */
+function initializeDemoUser() {
+  const user = getCurrentUser();
+  if (user && !user.subscribers) {
+    // Add demo stats if they don't exist
+    const demoStats = {
+      subscribers: Math.floor(Math.random() * 2000), // Random 0-2000
+      totalViews: Math.floor(Math.random() * 20000), // Random 0-20000
+      totalVideos: Math.floor(Math.random() * 10)
+    };
+
+    updateUser(demoStats);
+  }
+}
+
+/**
  * Handle authentication errors
  */
 function handleAuthError(error) {
@@ -291,6 +348,15 @@ document.addEventListener('click', (event) => {
   }
 });
 
+// Initialize demo user on page load
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (isAuthenticated()) {
+      initializeDemoUser();
+    }
+  });
+}
+
 // Export functions for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -310,6 +376,9 @@ if (typeof module !== 'undefined' && module.exports) {
     isValidUsername,
     validatePassword,
     getPasswordStrength,
+    isVerified,
+    getVerificationProgress,
+    initializeDemoUser,
     handleAuthError,
     initializeUserMenu,
     toggleUserDropdown
