@@ -2,6 +2,20 @@
 
 A complete, modern streaming platform with a clean UI/UX design, featuring video uploads, user authentication, analytics, and social features.
 
+## 🚀 **LIVE DEMO**
+
+**Deploy to GitHub Pages in 2 minutes!**
+
+1. Go to **Settings** → **Pages**
+2. Select branch: `claude/streaming-platform-design-01WjbFvg9pMd4Xw4yifC46DG`
+3. Select folder: `/ (root)`
+4. Click **Save**
+5. Visit: `https://[username].github.io/[repo-name]/`
+
+**Full deployment guide:** See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+
+---
+
 ## 🎯 Features
 
 ### Core Features
